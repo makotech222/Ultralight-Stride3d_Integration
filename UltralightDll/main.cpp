@@ -16,6 +16,7 @@ using namespace std;
 class UltralightApp {
 	RefPtr<Renderer> _renderer;
 	map<int, RefPtr<View>> _views;
+	map<int, unsigned char*> _rgbaTextures;
 	int _id;
 
 public:
@@ -60,11 +61,25 @@ public:
 		m.y = y;
 		_views[viewId]->FireMouseEvent(m);
 	}
+	void ExecuteKeyboardEvent(int viewId, uintptr_t wParam, intptr_t lParam, int type) {
+		auto m = ultralight::KeyEvent(static_cast<ultralight::KeyEvent::Type>(type), wParam, lParam, false);
+		_views[viewId]->FireKeyEvent(m);
+	}
+	void ExecuteScrollEvent(int viewId, int type, int deltax, int deltay) {
+		auto m = ultralight::ScrollEvent();
+		m.type = static_cast<ultralight::ScrollEvent::Type>(type);
+		m.delta_x = deltax;
+		m.delta_y = deltay;
+		_views[viewId]->FireScrollEvent(m);
+	}
 	void Update() {
 		_renderer->Update();
 	}
 	void Render() {
 		_renderer->Render();
+	}
+	unsigned char* GetRGBATexture(int viewId) {
+		return _rgbaTextures[viewId];
 	}
 	void DisposeView(int viewId) {
 		auto view = _views[viewId];
@@ -74,8 +89,32 @@ public:
 	}
 
 	RefPtr<Bitmap> GetViewBitmap(int viewId) {
+
 		auto view = _views[viewId];
-		return view->bitmap();
+		auto bitmap = view->bitmap();
+		if (_rgbaTextures.find(viewId) == _rgbaTextures.end()) {
+			_rgbaTextures.insert(make_pair(viewId, new unsigned char[bitmap->size()]));
+		}
+		auto input = static_cast<unsigned char*>(bitmap->raw_pixels());
+		ConvertTextureToXenkoFormat(input, bitmap->width(), bitmap->height(), _rgbaTextures[viewId]);
+		return bitmap;
+	}
+private:
+	void ConvertTextureToXenkoFormat(unsigned char* input, int pixel_width,
+		int pixel_height, unsigned char* output)
+	{
+		int offset = 0;
+
+		for (int y = 0; y < pixel_height; y++) {
+			for (int x = 0; x < pixel_width; x++) {
+				output[offset] = input[offset + 2];
+				output[offset + 1] = input[offset + 1];
+				output[offset + 2] = input[offset + 0];
+				output[offset + 3] = input[offset + 3];
+
+				offset += 4;
+			}
+		}
 	}
 };
 extern "C"
@@ -107,17 +146,25 @@ extern "C"
 	{
 		_app->ReloadView(viewId, htmlPath);
 	}
-
+	
 	__declspec(dllexport) void GetViewBitmap(int viewId, unsigned char** data, int* size)
 	{
 		auto bitmap = _app->GetViewBitmap(viewId);
 		*size = bitmap->size();
-		*data = static_cast<unsigned char*>(bitmap->raw_pixels());
+		*data = _app->GetRGBATexture(viewId);
 	}
 
 	__declspec(dllexport) void ExecuteMouseEvent(int viewId, int button, int type, int x, int y)
 	{
 		_app->ExecuteMouseEvent(viewId, button, type, x, y);
+	}
+	__declspec(dllexport) void ExecuteKeyboardEvent(int viewId, uintptr_t wParam, intptr_t lParam, int type)
+	{
+		_app->ExecuteKeyboardEvent(viewId, wParam, lParam, type);
+	}
+	__declspec(dllexport) void ExecuteScrollEvent(int viewId, int type, int deltax, int deltay)
+	{
+		_app->ExecuteScrollEvent(viewId, type, deltax, deltay);
 	}
 	__declspec(dllexport) void DisposeView(int viewId)
 	{
