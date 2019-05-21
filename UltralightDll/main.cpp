@@ -79,6 +79,13 @@ public:
 		_renderer->Render();
 	}
 	unsigned char* GetRGBATexture(int viewId) {
+		auto view = _views[viewId];
+		auto bitmap = view->bitmap();
+		if (_rgbaTextures.find(viewId) == _rgbaTextures.end()) {
+			_rgbaTextures.insert(make_pair(viewId, new unsigned char[bitmap->size()]));
+		}
+		auto input = static_cast<unsigned char*>(bitmap->raw_pixels());
+		ConvertTextureToXenkoFormat(input, bitmap->width(), bitmap->height(), _rgbaTextures[viewId]);
 		return _rgbaTextures[viewId];
 	}
 	void DisposeView(int viewId) {
@@ -91,13 +98,7 @@ public:
 	RefPtr<Bitmap> GetViewBitmap(int viewId) {
 
 		auto view = _views[viewId];
-		auto bitmap = view->bitmap();
-		if (_rgbaTextures.find(viewId) == _rgbaTextures.end()) {
-			_rgbaTextures.insert(make_pair(viewId, new unsigned char[bitmap->size()]));
-		}
-		auto input = static_cast<unsigned char*>(bitmap->raw_pixels());
-		ConvertTextureToXenkoFormat(input, bitmap->width(), bitmap->height(), _rgbaTextures[viewId]);
-		return bitmap;
+		return view->bitmap();
 	}
 private:
 	void ConvertTextureToXenkoFormat(unsigned char* input, int pixel_width,
