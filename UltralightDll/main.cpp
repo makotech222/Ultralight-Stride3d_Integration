@@ -9,9 +9,11 @@
 #include "FileSystemBasic.h"
 #include <vector>
 #include <map>
+#include <JavaScriptCore/JavaScript.h>
+#include <AppCore/JSHelpers.h>
 
 using namespace ultralight;
-using namespace std;
+using namespace std; 
 
 class UltralightApp {
 	RefPtr<Renderer> _renderer;
@@ -23,7 +25,6 @@ public:
 	UltralightApp(const char* assetDir) {
 		ultralight::Platform& platform = Platform::instance();
 		auto cfg = platform.config();
-		cfg.use_bgra_for_offscreen_rendering = true;
 		platform.set_file_system(new FileSystemBasic(assetDir));
 		platform.set_config(cfg);
 		_id = 0;
@@ -78,16 +79,20 @@ public:
 	void Render() {
 		_renderer->Render();
 	}
-	unsigned char* GetRGBATexture(int viewId) {
-		auto view = _views[viewId];
-		auto bitmap = view->bitmap();
-		if (_rgbaTextures.find(viewId) == _rgbaTextures.end()) {
-			_rgbaTextures.insert(make_pair(viewId, new unsigned char[bitmap->size()]));
-		}
-		auto input = static_cast<unsigned char*>(bitmap->raw_pixels());
-		ConvertTextureToXenkoFormat(input, bitmap->width(), bitmap->height(), _rgbaTextures[viewId]);
-		return _rgbaTextures[viewId];
+	void JavascriptEval(int viewId, const char* jsFunction) {
+		JSContextRef myContext = _views[viewId]->js_context();
+		SetJSContext(myContext);
+		JSEval(jsFunction);
+		//return String(.ToString()).utf16().udata();
 	}
+	//void CallJavascriptFunction(int viewId, const char* jsFunctionName, const JSArgs &args) {
+	//	JSObject global = JSGlobalObject();
+	//	JSFunction jsfunc = global[jsFunctionName];
+	//	if (jsfunc.IsValid())
+	//	{
+	//		JSValue result = jsfunc(args);
+	//	}
+	//}
 	void DisposeView(int viewId) {
 		auto view = _views[viewId];
 		view->Release();
@@ -101,11 +106,9 @@ public:
 		return view->bitmap();
 	}
 private:
-	void ConvertTextureToXenkoFormat(unsigned char* input, int pixel_width,
-		int pixel_height, unsigned char* output)
+	void ConvertTextureToXenkoFormat(unsigned char* input, int pixel_width,int pixel_height, unsigned char* output)
 	{
 		int offset = 0;
-
 		for (int y = 0; y < pixel_height; y++) {
 			for (int x = 0; x < pixel_width; x++) {
 				output[offset] = input[offset + 2];
@@ -152,7 +155,7 @@ extern "C"
 	{
 		auto bitmap = _app->GetViewBitmap(viewId);
 		*size = bitmap->size();
-		*data = _app->GetRGBATexture(viewId);
+		*data = static_cast<unsigned char*>(bitmap->raw_pixels());
 	}
 
 	__declspec(dllexport) void ExecuteMouseEvent(int viewId, int button, int type, int x, int y)
@@ -166,6 +169,10 @@ extern "C"
 	__declspec(dllexport) void ExecuteScrollEvent(int viewId, int type, int deltax, int deltay)
 	{
 		_app->ExecuteScrollEvent(viewId, type, deltax, deltay);
+	}
+	__declspec(dllexport) void JavascriptEval(int viewId, const char* jsFunction)
+	{
+		_app->JavascriptEval(viewId, jsFunction);
 	}
 	__declspec(dllexport) void DisposeView(int viewId)
 	{

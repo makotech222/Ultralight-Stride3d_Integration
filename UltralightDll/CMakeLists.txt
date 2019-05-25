@@ -1,7 +1,7 @@
 set(APP_NAME UltralightDll)
 include_directories(${UltralightSDKIncludes})
 link_directories(${UltralightSDKLibs})
-link_libraries(UltralightCore Ultralight WebCore)
+link_libraries(UltralightCore Ultralight WebCore AppCore)
 
 add_library(${APP_NAME} SHARED "main.cpp" "FileSystemBasic.cpp" "FileSystemBasic.h" )
 
