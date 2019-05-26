@@ -16,9 +16,9 @@ using namespace ultralight;
 using namespace std; 
 
 class UltralightApp {
+private:
 	RefPtr<Renderer> _renderer;
 	map<int, RefPtr<View>> _views;
-	map<int, unsigned char*> _rgbaTextures;
 	int _id;
 
 public:
@@ -82,7 +82,7 @@ public:
 	void JavascriptEval(int viewId, const char* jsFunction) {
 		JSContextRef myContext = _views[viewId]->js_context();
 		SetJSContext(myContext);
-		JSEval(jsFunction);
+		auto a = JSEval(jsFunction);
 		//return String(.ToString()).utf16().udata();
 	}
 	//void CallJavascriptFunction(int viewId, const char* jsFunctionName, const JSArgs &args) {
@@ -104,21 +104,6 @@ public:
 
 		auto view = _views[viewId];
 		return view->bitmap();
-	}
-private:
-	void ConvertTextureToXenkoFormat(unsigned char* input, int pixel_width,int pixel_height, unsigned char* output)
-	{
-		int offset = 0;
-		for (int y = 0; y < pixel_height; y++) {
-			for (int x = 0; x < pixel_width; x++) {
-				output[offset] = input[offset + 2];
-				output[offset + 1] = input[offset + 1];
-				output[offset + 2] = input[offset + 0];
-				output[offset + 3] = input[offset + 3];
-
-				offset += 4;
-			}
-		}
 	}
 };
 extern "C"
