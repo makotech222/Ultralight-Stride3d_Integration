@@ -51,8 +51,9 @@ public:
 		view->set_load_listener(this);
 		auto url = ultralight::String::String(htmlPath);
 		view->LoadURL(url);
-		while (view->is_loading() == false || _isReady == false)
+		while (_isReady == false) {
 			this->Update();
+		}
 		_views.insert(make_pair(_id++, view));
 		return _id;
 	}
