@@ -1,0 +1,26 @@
+!PrefabAsset
+Id: ff1d41b3-ef63-499b-86da-6bd3dd36bfdb
+SerializedVersion: {Stride: 3.1.0.1}
+Tags: []
+Hierarchy:
+    RootParts:
+        - ref!! 306670ff-aa81-462e-a2cf-289a5f3802da
+    Parts:
+        -   Entity:
+                Id: 306670ff-aa81-462e-a2cf-289a5f3802da
+                Name: UltralightUI
+                Components:
+                    8c8ceffb295fc7934df6a383cb02990e: !TransformComponent
+                        Id: a2c00d04-0ef0-4d3d-85a1-4e1e07695faf
+                        Position: {X: 0.0, Y: 0.0, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    877f598497fc4ef7f71dc334f68b0763: !UIComponent
+                        Id: b632e1c1-0cfb-47f8-9a42-21ba59b4a82d
+                        Page: 9e7ec52b-0115-45a5-ae78-ca556bdc3129:GUI/UltralightPage
+                        Resolution: {X: 1280.0, Y: 720.0, Z: 1000.0}
+                        Size: {X: 1.0, Y: 1.0, Z: 1.0}
+                        RenderGroup: Group1
+                    a9d7926ebe1a547e3afdb64da7605f13: !Renaissance.Gameplay.GUI.MainUI,Renaissance
+                        Id: 3a0aeb46-0fbd-4082-9d63-ca721347f603
